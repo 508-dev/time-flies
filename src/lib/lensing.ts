@@ -117,6 +117,27 @@ export const lensFragmentShader = /* glsl */ `
     return texture2D(uDiskLUT, vec2(t, 0.5));
   }
 
+  // Orbiting gas: integer angular frequencies keep it seamless around the ring;
+  // a domain-warp term adds swirl. Returns roughly [-1.1, 1.1].
+  float gasTurbulence(float r, float a) {
+    float v = 0.0;
+    v += 0.55 * sin(a * 4.0 + r * 2.2);
+    v += 0.30 * sin(a * 9.0 - r * 3.1 + 2.0 * sin(a * 2.0 + uTime * 0.1));
+    v += 0.17 * sin(a * 17.0 + r * 5.3);
+    v += 0.09 * sin(a * 29.0 - r * 7.0);
+    return v;
+  }
+
+  // Brightness modulation of the disk at (radius, angle), advected by a
+  // radius-dependent (Keplerian-ish) angular velocity — inner gas orbits faster.
+  float gasFlow(float r, float ang) {
+    float omega = 0.35 * pow(clamp(uDiskInner / max(r, uDiskInner), 0.0, 1.0), 1.5);
+    float a = ang + uTime * omega;
+    float v = gasTurbulence(r, a);
+    float g = clamp(0.5 + 0.6 * v, 0.0, 1.0);
+    return mix(0.45, 1.15, g); // dark dust lanes ↔ bright gas, never fully dark
+  }
+
   void main() {
     vec2 uv = (gl_FragCoord.xy / uResolution) * 2.0 - 1.0;
     uv.x *= uAspect;
@@ -169,10 +190,12 @@ export const lensFragmentShader = /* glsl */ `
           // Doppler-ish beaming: the side rotating toward us is brighter.
           float ang = atan(hit.z, hit.x);
           float beam = 0.75 + 0.45 * sin(ang + uTime * 0.25);
+          // Orbiting gas texture, faster nearer the hole.
+          float gas = gasFlow(rr, ang);
           // Highlight: boost the hovered band, gently dim the rest for contrast.
           float hl = uHighlightOn * exp(-pow((rr - uHighlightRadius) / 0.12, 2.0));
           float emphasis = mix(1.0, 0.5, uHighlightOn) + hl * 3.0;
-          col += transmit * disk.rgb * disk.a * beam * 1.5 * emphasis;
+          col += transmit * disk.rgb * disk.a * beam * gas * 1.5 * emphasis;
           col += transmit * disk.a * hl * 0.5; // white-hot core on the hovered band
           transmit *= (1.0 - disk.a * 0.9);
         }
