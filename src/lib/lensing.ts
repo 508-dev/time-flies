@@ -83,6 +83,7 @@ export const lensFragmentShader = /* glsl */ `
   uniform float uInfluence;
   uniform float uHighlightRadius; // radius of the hovered band
   uniform float uHighlightOn;     // 1 while a band is highlighted, else 0
+  uniform float uSeam;            // baseline radius (disk/corona boundary)
 
   float hash(vec3 p) {
     p = fract(p * 0.3183099 + 0.1);
@@ -189,13 +190,23 @@ export const lensFragmentShader = /* glsl */ `
         float f = pPrev.y / (pPrev.y - p.y);
         vec3 hit = mix(pPrev, p, f);
         float rr = length(hit.xz);
+        float ang = atan(hit.z, hit.x);
+        float gas = gasFlow(rr, ang); // orbiting gas texture, faster nearer the hole
+
+        // Faint base haze filling the disk plane between the activity bands, so
+        // the negative space reads as a continuous accretion disk. Purple toward
+        // the singularity, red out in the corona; fades to nothing at both edges.
+        float env = smoothstep(uDiskInner, uDiskInner + 0.5, rr)
+                  * (1.0 - smoothstep(uDiskOuter - 1.2, uDiskOuter, rr));
+        vec3 hazeCol = mix(vec3(0.34, 0.16, 0.60), vec3(0.62, 0.18, 0.12),
+                           smoothstep(uSeam, uSeam + 1.6, rr));
+        col += transmit * hazeCol * env * gas * 0.16;
+        transmit *= (1.0 - env * 0.08);
+
         vec4 disk = sampleDisk(rr);
         if (disk.a > 0.0) {
           // Doppler-ish beaming: the side rotating toward us is brighter.
-          float ang = atan(hit.z, hit.x);
           float beam = 0.75 + 0.45 * sin(ang + uTime * 0.25);
-          // Orbiting gas texture, faster nearer the hole.
-          float gas = gasFlow(rr, ang);
           // Highlight: boost the hovered band, gently dim the rest for contrast.
           float hl = uHighlightOn * exp(-pow((rr - uHighlightRadius) / 0.12, 2.0));
           float emphasis = mix(1.0, 0.5, uHighlightOn) + hl * 3.0;

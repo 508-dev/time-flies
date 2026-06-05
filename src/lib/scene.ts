@@ -24,7 +24,7 @@ import {
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { Activity } from "./types";
-import { feelToColor, feelToRadius, R_CORONA_OUTER, SHADOW_RADIUS } from "./mapping";
+import { feelToColor, feelToRadius, R_CORONA_OUTER, R_DISK_OUTER, SHADOW_RADIUS } from "./mapping";
 import { buildDiskLUT, lensFragmentShader, lensVertexShader } from "./lensing";
 
 type RenderMode = "shader" | "rings";
@@ -118,6 +118,7 @@ export class BlackHoleScene {
         uInfluence: { value: R_CORONA_OUTER * 1.45 },
         uHighlightRadius: { value: -1 },
         uHighlightOn: { value: 0 },
+        uSeam: { value: R_DISK_OUTER },
       },
     });
     this.fsScene.add(new Mesh(new PlaneGeometry(2, 2), this.lensMaterial));
