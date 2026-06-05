@@ -110,7 +110,11 @@ export const lensFragmentShader = /* glsl */ `
     float core = smoothstep(0.11, 0.0, dist);
     float bright = 0.7 + 0.7 * r.y;
     float tw = 0.75 + 0.25 * sin(uTime * 2.0 + r.z * 30.0);
-    return present * core * bright * tw * vec3(0.78, 0.85, 1.0);
+    // Subtle per-star color temperature: a random spread from faintly red to
+    // faintly blue, echoing the Doppler-scattered colors of the night sky.
+    float temp = hash(cell + 13.7);
+    vec3 tint = mix(vec3(1.0, 0.90, 0.82), vec3(0.82, 0.90, 1.0), temp);
+    return present * core * bright * tw * tint;
   }
 
   vec4 sampleDisk(float r) {
