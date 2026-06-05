@@ -47,7 +47,7 @@ The app is built with a toolchain, but the **output** is a set of plain static f
 1. **Scaffold + toolchain baseline** — Bun/Vite/Svelte/TS + Three.js, build verified.
 2. **Conceptual core** — data model, persistence, legend (add/edit/delete, sorted, colored), factor→radius and factor→hue mapping, activities rendered as colored bands around a dark sphere, tooltips, orbit camera. *This layer alone is a complete, submittable prototype.*
 3. **Gravitational lensing shader** — upgrade the visual to the lensed accretion disk, layered so it can degrade gracefully to Layer 2's render.
-4. **Polish** — mobile/tap behavior, responsive layout, final build and static-serve check.
+. **Polish** — mobile/tap behavior, responsive layout, final build and static-serve check.
 
 ### Developing
 

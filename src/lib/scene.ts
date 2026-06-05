@@ -1,25 +1,33 @@
 import {
   AdditiveBlending,
   BufferGeometry,
+  Camera,
   Color,
+  type DataTexture,
   DoubleSide,
   Float32BufferAttribute,
   Group,
   Mesh,
   MeshBasicMaterial,
   PerspectiveCamera,
+  PlaneGeometry,
   Points,
   PointsMaterial,
   Raycaster,
   RingGeometry,
   Scene,
+  ShaderMaterial,
   SphereGeometry,
   Vector2,
+  Vector3,
   WebGLRenderer,
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { Activity } from "./types";
-import { factorToColor, factorToRadius, SHADOW_RADIUS } from "./mapping";
+import { factorToColor, factorToRadius, R_CORONA_OUTER, SHADOW_RADIUS } from "./mapping";
+import { buildDiskLUT, lensFragmentShader, lensVertexShader } from "./lensing";
+
+type RenderMode = "shader" | "rings";
 
 export interface HoverEvent {
   activity: Activity;
@@ -50,6 +58,17 @@ export class BlackHoleScene {
   private readonly pointer = new Vector2();
   private readonly resizeObserver: ResizeObserver;
 
+  // Layer 3 — the lensing shader, rendered as a fullscreen pass.
+  private readonly fsScene = new Scene();
+  private readonly fsCamera = new Camera();
+  private readonly lensMaterial: ShaderMaterial;
+  private diskLUT: DataTexture | null = null;
+  private mode: RenderMode = "shader";
+  private readonly startTime = performance.now();
+  private readonly camRight = new Vector3();
+  private readonly camUp = new Vector3();
+  private readonly camForward = new Vector3();
+
   private hoverHandler: HoverHandler = () => {};
   private lastPointer: { clientX: number; clientY: number } | null = null;
   private rafId = 0;
@@ -62,18 +81,47 @@ export class BlackHoleScene {
     container.appendChild(this.renderer.domElement);
 
     this.camera = new PerspectiveCamera(45, 1, 0.1, 200);
-    this.camera.position.set(0, 2.4, 11);
+    this.camera.position.set(0, 3.4, 16);
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
     this.controls.minDistance = 4;
-    this.controls.maxDistance = 30;
+    this.controls.maxDistance = 45;
     this.controls.target.set(0, 0, 0);
 
+    // Layer 2 objects double as the graceful fallback if the shader won't compile.
     this.scene.add(this.bands, this.picks);
     this.addShadow();
     this.addStarfield();
+
+    // Layer 3: fullscreen lensing pass.
+    this.lensMaterial = new ShaderMaterial({
+      vertexShader: lensVertexShader,
+      fragmentShader: lensFragmentShader,
+      depthTest: false,
+      depthWrite: false,
+      uniforms: {
+        uResolution: { value: new Vector2(1, 1) },
+        uCamPos: { value: new Vector3() },
+        uCamRight: { value: this.camRight },
+        uCamUp: { value: this.camUp },
+        uCamForward: { value: this.camForward },
+        uTanHalfFov: { value: Math.tan(((this.camera.fov * Math.PI) / 180) / 2) },
+        uAspect: { value: 1 },
+        uTime: { value: 0 },
+        uDiskLUT: { value: null },
+        uDiskInner: { value: SHADOW_RADIUS },
+        uDiskOuter: { value: R_CORONA_OUTER },
+        uShadowRadius: { value: SHADOW_RADIUS },
+        uInfluence: { value: R_CORONA_OUTER * 1.45 },
+      },
+    });
+    this.fsScene.add(new Mesh(new PlaneGeometry(2, 2), this.lensMaterial));
+    // If the lensing shader fails to compile on this GPU, fall back to Layer 2.
+    this.renderer.debug.onShaderError = () => {
+      this.mode = "rings";
+    };
 
     this.resize();
     this.resizeObserver = new ResizeObserver(() => this.resize());
@@ -124,6 +172,11 @@ export class BlackHoleScene {
       pick.userData.activity = activity;
       this.picks.add(pick);
     }
+
+    // Rebuild the disk lookup table for the lensing shader.
+    this.diskLUT?.dispose();
+    this.diskLUT = buildDiskLUT(list, SHADOW_RADIUS, R_CORONA_OUTER);
+    this.lensMaterial.uniforms.uDiskLUT.value = this.diskLUT;
   }
 
   /** Emphasize a single activity's band (driven by legend hover). */
@@ -199,6 +252,22 @@ export class BlackHoleScene {
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
+
+    const pr = this.renderer.getPixelRatio();
+    this.lensMaterial.uniforms.uResolution.value.set(w * pr, h * pr);
+    this.lensMaterial.uniforms.uAspect.value = w / h;
+  }
+
+  private updateLensUniforms(): void {
+    const u = this.lensMaterial.uniforms;
+    this.camera.updateMatrixWorld();
+    const e = this.camera.matrixWorld.elements;
+    this.camRight.set(e[0], e[1], e[2]);
+    this.camUp.set(e[4], e[5], e[6]);
+    this.camForward.set(-e[8], -e[9], -e[10]); // camera looks down -Z
+    u.uCamPos.value.copy(this.camera.position);
+    u.uTanHalfFov.value = Math.tan(((this.camera.fov * Math.PI) / 180) / 2);
+    u.uTime.value = (performance.now() - this.startTime) / 1000;
   }
 
   private readonly loop = (): void => {
@@ -207,7 +276,13 @@ export class BlackHoleScene {
     this.controls.update();
     // Keep the tooltip anchored to the right ring as the camera orbits.
     if (this.lastPointer) this.updateHover();
-    this.renderer.render(this.scene, this.camera);
+
+    if (this.mode === "shader") {
+      this.updateLensUniforms();
+      this.renderer.render(this.fsScene, this.fsCamera);
+    } else {
+      this.renderer.render(this.scene, this.camera);
+    }
   };
 
   private clearGroup(group: Group): void {
@@ -229,6 +304,11 @@ export class BlackHoleScene {
     this.renderer.domElement.removeEventListener("pointerleave", this.onPointerLeave);
     this.clearGroup(this.bands);
     this.clearGroup(this.picks);
+    this.diskLUT?.dispose();
+    this.lensMaterial.dispose();
+    for (const child of this.fsScene.children) {
+      if (child instanceof Mesh) child.geometry.dispose();
+    }
     this.controls.dispose();
     this.renderer.dispose();
     this.renderer.domElement.remove();
