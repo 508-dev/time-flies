@@ -1,16 +1,18 @@
 import { writable } from "svelte/store";
 import type { Activity } from "./types";
 
-const STORAGE_KEY = "time-flies.activities.v1";
+// v2: model changed from positive compression factor to signed feel ∈ [-1, 1].
+const STORAGE_KEY = "time-flies.activities.v2";
 
-/** Seeded on first visit — the examples from the project spec, and then some. */
+/** Seeded on first visit — examples spanning drag → baseline → fly → the zone. */
 const SEED: Omit<Activity, "id">[] = [
-  { name: "Waiting at the dentist", factor: 3.0 },
-  { name: "Dreading Monday morning", factor: 1.8 },
-  { name: "A red traffic light", factor: 1.0 },
-  { name: "A good conversation", factor: 0.6 },
-  { name: "Playing basketball", factor: 0.45 },
-  { name: "Lost in a great book", factor: 0.3 },
+  { name: "Waiting at the dentist", feel: -0.45 },
+  { name: "Dreading Monday morning", feel: -0.25 },
+  { name: "A red traffic light", feel: 0 },
+  { name: "A good conversation", feel: 0.3 },
+  { name: "Playing basketball", feel: 0.5 },
+  { name: "Lost in a great book", feel: 0.68 },
+  { name: "Deep in meditation", feel: 0.88 },
 ];
 
 function withId(a: Omit<Activity, "id">): Activity {
@@ -27,11 +29,10 @@ function load(): Activity[] {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        const valid = parsed.filter(
+        return parsed.filter(
           (a): a is Activity =>
-            a && typeof a.id === "string" && typeof a.name === "string" && typeof a.factor === "number",
+            a && typeof a.id === "string" && typeof a.name === "string" && typeof a.feel === "number",
         );
-        return valid;
       }
     }
   } catch {
@@ -54,8 +55,8 @@ function createActivityStore() {
 
   return {
     subscribe,
-    add(name: string, factor: number): void {
-      update((list) => persist([...list, withId({ name, factor })]));
+    add(name: string, feel: number): void {
+      update((list) => persist([...list, withId({ name, feel })]));
     },
     edit(id: string, patch: Partial<Omit<Activity, "id">>): void {
       update((list) => persist(list.map((a) => (a.id === id ? { ...a, ...patch } : a))));

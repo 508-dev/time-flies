@@ -1,6 +1,6 @@
 import { DataTexture, LinearFilter, RGBAFormat } from "three";
 import type { Activity } from "./types";
-import { factorToColor, factorToRadius } from "./mapping";
+import { feelToColor, feelToRadius } from "./mapping";
 
 /**
  * The accretion disk's color/intensity as a 1-D lookup texture, indexed by
@@ -18,8 +18,8 @@ export function buildDiskLUT(list: Activity[], inner: number, outer: number): Da
   const accW = new Float32Array(W);
 
   for (const activity of list) {
-    const radius = factorToRadius(activity.factor);
-    const color = factorToColor(activity.factor);
+    const radius = feelToRadius(activity.feel);
+    const color = feelToColor(activity.feel);
     for (let i = 0; i < W; i++) {
       const r = inner + ((outer - inner) * i) / (W - 1);
       const d = (r - radius) / sigma;

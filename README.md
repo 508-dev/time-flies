@@ -60,6 +60,12 @@ bun run preview  # serve the built dist/ locally to smoke-test
 
 ### The mapping, precisely
 
-- **Compression factor ≥ 1** → the **corona** (red hues). Factor `1` sits at the inner edge of the corona; larger factors ("feels like forever") sit further out.
-- **Compression factor < 1** → the **accretion disk** (purple hues). The lower the factor ("felt shorter than it was"), the closer to the event-horizon shadow.
-- **Hue is a stable function of the compression factor** — a given factor always maps to the same hue, regardless of which/how many activities share it. The legend doubles as the color key.
+The model is a **signed perceptual "feel"** in `[-1, 1]` (the position of a slider), recentered so that baseline is `0`:
+
+- **`feel = 0`** — baseline: it felt exactly as long as it was (1:1). This is the seam between corona and disk.
+- **`feel < 0`** — time **dragged** (felt longer). Mapped to the **corona** (red hues), drifting outward toward the edge ("endless") as `feel → -1`.
+- **`feel > 0`** — time **flew** (felt shorter). Mapped to the **accretion disk** (purple hues), falling inward toward the event-horizon shadow — the **"zone"** where time vanishes — as `feel → 1`.
+
+Internally, `feel` maps through a log-ratio `F = ln(actual / felt) = tan(feel · π/2 · 0.985)`, and `F` maps to radius via an exponential asymptote. So the singularity is a limit the slider *approaches but never reaches* — you can't type "10000000× faster"; you slide toward the zone. Hue is a stable function of `feel`, so the legend doubles as the color key.
+
+**Input:** each activity is set with a **perceptual slider** (drags ← baseline → flies/zone) rather than a typed number, and the legend shows an evocative descriptor (`feels ~2.3× faster`, `the zone · time vanishes`) instead of raw unbounded multipliers.

@@ -24,7 +24,7 @@ import {
 } from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import type { Activity } from "./types";
-import { factorToColor, factorToRadius, R_CORONA_OUTER, SHADOW_RADIUS } from "./mapping";
+import { feelToColor, feelToRadius, R_CORONA_OUTER, SHADOW_RADIUS } from "./mapping";
 import { buildDiskLUT, lensFragmentShader, lensVertexShader } from "./lensing";
 
 type RenderMode = "shader" | "rings";
@@ -145,8 +145,8 @@ export class BlackHoleScene {
     this.bandById.clear();
 
     for (const activity of list) {
-      const radius = factorToRadius(activity.factor);
-      const color = factorToColor(activity.factor);
+      const radius = feelToRadius(activity.feel);
+      const color = feelToColor(activity.feel);
 
       const band = new Mesh(
         new RingGeometry(radius - BAND_HALF_WIDTH, radius + BAND_HALF_WIDTH, 128),
@@ -160,7 +160,7 @@ export class BlackHoleScene {
         }),
       );
       band.rotation.x = -Math.PI / 2;
-      band.userData.factor = activity.factor;
+      band.userData.feel = activity.feel;
       this.bands.add(band);
       this.bandById.set(activity.id, band);
 

@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { activities } from "./lib/store";
   import { BlackHoleScene, type HoverEvent } from "./lib/scene";
-  import { factorToCss, isCorona } from "./lib/mapping";
+  import { feelToCss, feelDescriptor, zoneLabel } from "./lib/mapping";
   import Legend from "./lib/Legend.svelte";
 
   let container: HTMLDivElement;
@@ -41,10 +41,10 @@
 
 {#if hover && tip}
   <div class="tooltip" style:left="{tip.left}px" style:top="{tip.top}px">
-    <span class="swatch" style:background={factorToCss(hover.activity.factor)}></span>
+    <span class="swatch" style:background={feelToCss(hover.activity.feel)}></span>
     <span class="label">{hover.activity.name}</span>
     <span class="value">
-      {hover.activity.factor}× · {isCorona(hover.activity.factor) ? "corona" : "accretion disk"}
+      {feelDescriptor(hover.activity.feel)} · {zoneLabel(hover.activity.feel)}
     </span>
   </div>
 {/if}
