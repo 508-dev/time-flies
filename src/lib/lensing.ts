@@ -200,7 +200,7 @@ export const lensFragmentShader = /* glsl */ `
                   * (1.0 - smoothstep(uDiskOuter - 1.0, uDiskOuter, rr));
         vec3 hazeCol = mix(vec3(0.5, 0.25, 0.60), vec3(0.62, 0.18, 0.12),
                            smoothstep(uSeam, uSeam + 1.6, rr));
-        col += transmit * hazeCol * env * gas * 0.18;
+        col += transmit * hazeCol * env * gas * 0.28;
         transmit *= (1.0 - env * 0.08);
 
         vec4 disk = sampleDisk(rr);
