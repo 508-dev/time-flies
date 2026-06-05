@@ -24,11 +24,46 @@ In the legend is a "plus" button to allow adding a new activity. An activity is 
 
 ## Technical Specifications
 
-This is a single-page app designed to render on web browsers with javascript enabled. Non-javascript browsers will be, for now, asked to enable javascript.
+This is a single-page app designed to render on web browsers with javascript enabled. Non-javascript browsers are shown a notice asking them to enable javascript.
 
-The final bundle is a single html file, a single javscript file, and if needed, a single css file. It can be served statically on any static server such as github pages, apache, etc, with no server configuration needed.
+The app is built with a toolchain, but the **output** is a set of plain static files (`dist/`) — hashed HTML, JS, and CSS — that can be served from any static host (GitHub Pages, Apache, S3, etc.) with no server configuration. The build step exists only at author time; deployment is static.
 
-### Decisions to be made
+### Decisions made
 
-1. Should a framework be used (such as vue.js), and if so, the requisite build burden (bun, package.json) added, or, should a vanilla javascript script.js be used, with CDNs to potential graphing libraries? 
-2. What graphing library, if any, should be used, to depict the black hole? d3, threejs, plotly?
+These resolve the open questions from the original spec.
+
+1. **Framework & build tooling.** We use a framework with a build step rather than vanilla JS + CDNs. The WebGL shader work and the interactive legend benefit from real components and type safety.
+   - **Svelte** (v5) for UI components (the legend, tooltips, the add/edit controls).
+   - **TypeScript** throughout.
+   - **Vite** (v8) as the dev server and bundler, via the official Svelte plugin, producing the static `dist/` output.
+   - **Bun** as the package manager and script runner (`bun install`, `bun run dev`, `bun run build`). Bun runs Vite; Vite owns Svelte compilation (the most battle-tested path for `.svelte` files).
+2. **Graphing / rendering library.** **Three.js** (WebGL). The black hole is rendered as a 3D scene with a custom GLSL fragment shader that approximates gravitational lensing — the accretion disk warping up and over the event-horizon shadow, Interstellar-style. (`d3`/`plotly` were considered but can't produce the lensing effect.)
+
+### Other decisions
+
+- **Persistence:** activities are stored in `localStorage` and persist across reloads. The app ships seeded with example activities on first load.
+- **Camera:** orbitable — drag to rotate, scroll/pinch to zoom (Three.js `OrbitControls`).
+
+### Build approach
+
+To keep a hard deadline safe, the app is built in protective layers, each one independently shippable:
+
+1. **Scaffold + toolchain baseline** — Bun/Vite/Svelte/TS + Three.js, build verified.
+2. **Conceptual core** — data model, persistence, legend (add/edit/delete, sorted, colored), factor→radius and factor→hue mapping, activities rendered as colored bands around a dark sphere, tooltips, orbit camera. *This layer alone is a complete, submittable prototype.*
+3. **Gravitational lensing shader** — upgrade the visual to the lensed accretion disk, layered so it can degrade gracefully to Layer 2's render.
+4. **Polish** — mobile/tap behavior, responsive layout, final build and static-serve check.
+
+### Developing
+
+```bash
+bun install      # install dependencies
+bun run dev      # start the Vite dev server (HMR)
+bun run build    # produce static files in dist/
+bun run preview  # serve the built dist/ locally to smoke-test
+```
+
+### The mapping, precisely
+
+- **Compression factor ≥ 1** → the **corona** (red hues). Factor `1` sits at the inner edge of the corona; larger factors ("feels like forever") sit further out.
+- **Compression factor < 1** → the **accretion disk** (purple hues). The lower the factor ("felt shorter than it was"), the closer to the event-horizon shadow.
+- **Hue is a stable function of the compression factor** — a given factor always maps to the same hue, regardless of which/how many activities share it. The legend doubles as the color key.
