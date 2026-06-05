@@ -4,6 +4,7 @@
   import { BlackHoleScene, type HoverEvent } from "./lib/scene";
   import { feelToCss, feelDescriptor, zoneLabel } from "./lib/mapping";
   import Legend from "./lib/Legend.svelte";
+  import About from "./lib/About.svelte";
 
   let container: HTMLDivElement;
   let scene: BlackHoleScene | undefined = $state();
@@ -41,6 +42,8 @@
 <div class="canvas" bind:this={container}></div>
 
 <Legend onhover={(id) => scene?.setHighlight(id)} />
+
+<About />
 
 {#if hover && tip}
   <div class="tooltip" style:left="{tip.left}px" style:top="{tip.top}px">
