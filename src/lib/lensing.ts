@@ -104,11 +104,11 @@ export const lensFragmentShader = /* glsl */ `
     vec3 cell = floor(base);
     vec3 frac = base - cell - 0.5;        // [-0.5, 0.5] within the cell
     vec3 r = hash3(cell);
-    float present = step(0.30, r.x);       // ~70% of cells hold a star
+    float present = step(0.10, r.x);       // ~90% of cells hold a star
     vec3 starPos = (hash3(cell + 5.0) - 0.5) * 0.6;
     float dist = length(frac - starPos);
     float core = smoothstep(0.11, 0.0, dist);
-    float bright = 0.5 + 0.5 * r.y;
+    float bright = 0.7 + 0.7 * r.y;
     float tw = 0.75 + 0.25 * sin(uTime * 2.0 + r.z * 30.0);
     return present * core * bright * tw * vec3(0.78, 0.85, 1.0);
   }
