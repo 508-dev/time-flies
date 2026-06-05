@@ -19,7 +19,7 @@ In 01938, Herbert E. Ives and G. R. Stilwell demonstrated the existence of relat
 
 In order to service the metaphor, the "reference time" is set within the orbit of the black hole, between the corona (outer orbit) and accretion disk (inner orbit).
 
-As a user lists activities and their expansion ratios, the hope is that individuals will have a better understanding of the kind of activities that can get them close to, or into, "the zone." It's a tool to help users recognize what activities bring them frustration and boredom, and what activities bring them absorption and fulfillment.
+As a user lists activities and their expansion ratios, the hope is that individuals will have a better understanding of the kind of activities that can get them close to, or into, "the zone." It's a tool to help users recognize what activities bring them frustration and boredom, and what activities bring them absorption and fulfillment. It's meant to help users increase the surface area of their existence.
 
 # Affiliations and Community
 

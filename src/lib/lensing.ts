@@ -117,23 +117,27 @@ export const lensFragmentShader = /* glsl */ `
     return texture2D(uDiskLUT, vec2(t, 0.5));
   }
 
-  // Orbiting gas: integer angular frequencies keep it seamless around the ring;
-  // a domain-warp term adds swirl. Returns roughly [-1.1, 1.1].
+  // Orbiting gas: integer angular frequencies keep it seamless and exactly
+  // 2π-periodic in the (advected) angle. Returns roughly [-1.1, 1.1].
   float gasTurbulence(float r, float a) {
     float v = 0.0;
     v += 0.55 * sin(a * 4.0 + r * 2.2);
-    v += 0.30 * sin(a * 9.0 - r * 3.1 + 2.0 * sin(a * 2.0 + uTime * 0.1));
+    v += 0.30 * sin(a * 9.0 - r * 3.1 + 2.0 * sin(a * 2.0));
     v += 0.17 * sin(a * 17.0 + r * 5.3);
     v += 0.09 * sin(a * 29.0 - r * 7.0);
     return v;
   }
 
-  // Brightness modulation of the disk at (radius, angle), advected by a
-  // radius-dependent (Keplerian-ish) angular velocity — inner gas orbits faster.
+  // Brightness modulation of the disk at (radius, angle). Two rigidly-rotating
+  // layers (fast inner, slow outer) blended by radius read as differential
+  // rotation but never wind to a standstill. Phase is wrapped mod 2π — invisible
+  // given the integer frequencies — so motion stays crisp indefinitely.
   float gasFlow(float r, float ang) {
-    float omega = 0.35 * pow(clamp(uDiskInner / max(r, uDiskInner), 0.0, 1.0), 1.5);
-    float a = ang + uTime * omega;
-    float v = gasTurbulence(r, a);
+    float arms = ang + r * 1.6; // frozen spiral-arm shape
+    float fast = arms - mod(uTime * 0.50, 6.2831853);
+    float slow = arms - mod(uTime * 0.13, 6.2831853);
+    float w = clamp((uDiskOuter - r) / (uDiskOuter - uDiskInner), 0.0, 1.0); // 1 inner → 0 outer
+    float v = mix(gasTurbulence(r, slow), gasTurbulence(r, fast), w);
     float g = clamp(0.5 + 0.6 * v, 0.0, 1.0);
     return mix(0.45, 1.15, g); // dark dust lanes ↔ bright gas, never fully dark
   }
