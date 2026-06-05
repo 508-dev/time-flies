@@ -59,8 +59,8 @@
         <input
           class="factor"
           type="number"
-          min="0.01"
-          step="0.05"
+          min="0.1"
+          step="any"
           value={a.factor}
           aria-label="Compression factor"
           onchange={(e) => commitFactor(a, e.currentTarget.value)}
@@ -79,7 +79,7 @@
     <form class="add-form" onsubmit={(e) => (e.preventDefault(), submitNew())}>
       <!-- svelte-ignore a11y_autofocus -->
       <input class="name" placeholder="Activity name" bind:value={newName} autofocus />
-      <input class="factor" type="number" min="0.01" step="0.05" bind:value={newFactor} />
+      <input class="factor" type="number" min="0.1" step="any" bind:value={newFactor} />
       <button type="submit" class="confirm" aria-label="Add activity">✓</button>
       <button type="button" class="remove" aria-label="Cancel" onclick={() => (adding = false)}>×</button>
     </form>
