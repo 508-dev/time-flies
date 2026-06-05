@@ -53,6 +53,7 @@ export class BlackHoleScene {
   private readonly bands = new Group(); // visible glow rings
   private readonly picks = new Group(); // invisible wider rings for raycasting
   private readonly bandById = new Map<string, Mesh>();
+  private readonly radiusById = new Map<string, number>();
   private highlightedId: string | null = null;
   private readonly raycaster = new Raycaster();
   private readonly pointer = new Vector2();
@@ -115,6 +116,8 @@ export class BlackHoleScene {
         uDiskOuter: { value: R_CORONA_OUTER },
         uShadowRadius: { value: SHADOW_RADIUS },
         uInfluence: { value: R_CORONA_OUTER * 1.45 },
+        uHighlightRadius: { value: -1 },
+        uHighlightOn: { value: 0 },
       },
     });
     this.fsScene.add(new Mesh(new PlaneGeometry(2, 2), this.lensMaterial));
@@ -143,9 +146,11 @@ export class BlackHoleScene {
     this.clearGroup(this.bands);
     this.clearGroup(this.picks);
     this.bandById.clear();
+    this.radiusById.clear();
 
     for (const activity of list) {
       const radius = feelToRadius(activity.feel);
+      this.radiusById.set(activity.id, radius);
       const color = feelToColor(activity.feel);
 
       const band = new Mesh(
@@ -179,10 +184,17 @@ export class BlackHoleScene {
     this.lensMaterial.uniforms.uDiskLUT.value = this.diskLUT;
   }
 
-  /** Emphasize a single activity's band (driven by legend hover). */
+  /** Emphasize a single activity's band (driven by legend or scene hover). */
   setHighlight(id: string | null): void {
     if (id === this.highlightedId) return;
     this.highlightedId = id;
+
+    // Shader mode: highlight the lensed band by its radius.
+    const radius = id ? this.radiusById.get(id) : undefined;
+    this.lensMaterial.uniforms.uHighlightOn.value = radius !== undefined ? 1 : 0;
+    if (radius !== undefined) this.lensMaterial.uniforms.uHighlightRadius.value = radius;
+
+    // Ring fallback: emphasize via opacity/scale.
     for (const [bandId, band] of this.bandById) {
       const active = bandId === id;
       const material = band.material as MeshBasicMaterial;

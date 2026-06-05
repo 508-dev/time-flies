@@ -81,6 +81,8 @@ export const lensFragmentShader = /* glsl */ `
   uniform float uDiskOuter;
   uniform float uShadowRadius;
   uniform float uInfluence;
+  uniform float uHighlightRadius; // radius of the hovered band
+  uniform float uHighlightOn;     // 1 while a band is highlighted, else 0
 
   float hash(vec3 p) {
     p = fract(p * 0.3183099 + 0.1);
@@ -167,7 +169,11 @@ export const lensFragmentShader = /* glsl */ `
           // Doppler-ish beaming: the side rotating toward us is brighter.
           float ang = atan(hit.z, hit.x);
           float beam = 0.75 + 0.45 * sin(ang + uTime * 0.25);
-          col += transmit * disk.rgb * disk.a * beam * 1.5;
+          // Highlight: boost the hovered band, gently dim the rest for contrast.
+          float hl = uHighlightOn * exp(-pow((rr - uHighlightRadius) / 0.12, 2.0));
+          float emphasis = mix(1.0, 0.5, uHighlightOn) + hl * 3.0;
+          col += transmit * disk.rgb * disk.a * beam * 1.5 * emphasis;
+          col += transmit * disk.a * hl * 0.5; // white-hot core on the hovered band
           transmit *= (1.0 - disk.a * 0.9);
         }
       }

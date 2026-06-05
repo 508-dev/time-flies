@@ -11,7 +11,10 @@
 
   onMount(() => {
     const s = new BlackHoleScene(container);
-    s.onHover((h) => (hover = h));
+    s.onHover((h) => {
+      hover = h;
+      s.setHighlight(h ? h.activity.id : null);
+    });
     scene = s;
     return () => s.dispose();
   });
