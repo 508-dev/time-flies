@@ -98,8 +98,7 @@
   {/if}
 
   <footer>
-    <span>← time drags · the corona, red · felt longer</span>
-    <span>time flies · the accretion disk, purple · felt shorter →</span>
+    <span>← time drags (feels longer) | time flies (feels shorter) →</span>
     <span>built by <a href="https://calebjay.com">Caleb</a>, and is <a href="https://github.com/508-dev/time-flies#">FOSS</a></span>
   </footer>
 </aside>
@@ -317,7 +316,8 @@
   footer {
     display: flex;
     flex-direction: column;
-    gap: 0.1rem;
+    align-items: center;
+    gap: 0.2rem;
     color: var(--muted);
     font-size: 0.64rem;
     letter-spacing: 0.02em;
