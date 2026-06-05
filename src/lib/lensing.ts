@@ -197,10 +197,10 @@ export const lensFragmentShader = /* glsl */ `
         // the negative space reads as a continuous accretion disk. Purple toward
         // the singularity, red out in the corona; fades to nothing at both edges.
         float env = smoothstep(uDiskInner, uDiskInner + 0.5, rr)
-                  * (1.0 - smoothstep(uDiskOuter - 1.2, uDiskOuter, rr));
-        vec3 hazeCol = mix(vec3(0.34, 0.16, 0.60), vec3(0.62, 0.18, 0.12),
+                  * (1.0 - smoothstep(uDiskOuter - 1.0, uDiskOuter, rr));
+        vec3 hazeCol = mix(vec3(0.5, 0.25, 0.60), vec3(0.62, 0.18, 0.12),
                            smoothstep(uSeam, uSeam + 1.6, rr));
-        col += transmit * hazeCol * env * gas * 0.16;
+        col += transmit * hazeCol * env * gas * 0.18;
         transmit *= (1.0 - env * 0.08);
 
         vec4 disk = sampleDisk(rr);
