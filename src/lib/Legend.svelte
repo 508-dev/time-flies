@@ -98,8 +98,8 @@
   {/if}
 
   <footer>
-    <span>← drags · the corona, red · felt longer</span>
-    <span>flies · the disk, purple · felt shorter →</span>
+    <span>← time drags · the corona, red · felt longer</span>
+    <span>time flies · the accretion disk, purple · felt shorter →</span>
     <span>built by <a href="https://calebjay.com">Caleb</a>, and is <a href="https://github.com/508-dev/time-flies#">FOSS</a></span>
   </footer>
 </aside>
