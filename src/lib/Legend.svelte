@@ -242,4 +242,25 @@
     border-top: 1px solid var(--panel-border);
     padding-top: 0.5rem;
   }
+
+  @media (max-width: 480px) {
+    .legend {
+      top: 0.5rem;
+      left: 0.5rem;
+      width: calc(100vw - 1rem);
+      max-height: 50vh;
+      padding: 0.75rem;
+      gap: 0.4rem;
+    }
+    header h1 {
+      font-size: 1.2rem;
+    }
+    /* Hide the per-row zone label to make room on narrow screens. */
+    .zone {
+      display: none;
+    }
+    li {
+      grid-template-columns: 0.8rem 1fr 3rem auto;
+    }
+  }
 </style>

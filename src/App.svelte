@@ -21,14 +21,26 @@
     const list = $activities;
     scene?.setActivities(list);
   });
+
+  // Position the tooltip near the pointer but clamped inside the viewport, so a
+  // tap on a band near a screen edge (mobile) stays fully visible.
+  let tip = $derived.by(() => {
+    if (!hover) return null;
+    const w = 240;
+    const h = 52;
+    const pad = 12;
+    const left = Math.max(pad, Math.min(hover.clientX + 14, window.innerWidth - w - pad));
+    const top = Math.max(pad, Math.min(hover.clientY + 14, window.innerHeight - h - pad));
+    return { left, top };
+  });
 </script>
 
 <div class="canvas" bind:this={container}></div>
 
 <Legend onhover={(id) => scene?.setHighlight(id)} />
 
-{#if hover}
-  <div class="tooltip" style:left="{hover.clientX}px" style:top="{hover.clientY}px">
+{#if hover && tip}
+  <div class="tooltip" style:left="{tip.left}px" style:top="{tip.top}px">
     <span class="swatch" style:background={factorToCss(hover.activity.factor)}></span>
     <span class="label">{hover.activity.name}</span>
     <span class="value">
@@ -46,7 +58,6 @@
 
   .tooltip {
     position: fixed;
-    transform: translate(0.9rem, 0.9rem);
     pointer-events: none;
     z-index: 10;
     display: flex;
