@@ -162,7 +162,7 @@
     font: inherit;
     font-size: 0.82rem;
     padding: 0.2rem 0.3rem;
-    min-width: 0;
+    min-width: 57px;
   }
   input:hover {
     border-color: var(--panel-border);
