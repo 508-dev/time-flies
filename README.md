@@ -30,8 +30,6 @@ The app is built with a toolchain, but the **output** is a set of plain static f
 
 ### Decisions made
 
-These resolve the open questions from the original spec.
-
 1. **Framework & build tooling.** We use a framework with a build step rather than vanilla JS + CDNs. The WebGL shader work and the interactive legend benefit from real components and type safety.
    - **Svelte** (v5) for UI components (the legend, tooltips, the add/edit controls).
    - **TypeScript** throughout.
@@ -45,8 +43,6 @@ These resolve the open questions from the original spec.
 - **Camera:** orbitable — drag to rotate, scroll/pinch to zoom (Three.js `OrbitControls`).
 
 ### Build approach
-
-To keep a hard deadline safe, the app is built in protective layers, each one independently shippable:
 
 1. **Scaffold + toolchain baseline** — Bun/Vite/Svelte/TS + Three.js, build verified.
 2. **Conceptual core** — data model, persistence, legend (add/edit/delete, sorted, colored), factor→radius and factor→hue mapping, activities rendered as colored bands around a dark sphere, tooltips, orbit camera. *This layer alone is a complete, submittable prototype.*
