@@ -55,6 +55,13 @@
     inset: 0;
     touch-action: none;
   }
+  /* Display the canvas at the container's size; the WebGL drawing buffer stays
+     at full (HiDPI) resolution via renderer.setSize, decoupled from CSS size. */
+  .canvas :global(canvas) {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
 
   .tooltip {
     position: fixed;
