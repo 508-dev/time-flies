@@ -143,7 +143,20 @@
     display: flex;
     flex-direction: column;
     gap: 0.55rem;
-    overflow-y: auto;
+    /* Always-visible scrollbar so it's obvious more activities lie below. */
+    overflow-y: scroll;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(182, 156, 255, 0.6) transparent;
+  }
+  ul::-webkit-scrollbar {
+    width: 8px;
+  }
+  ul::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ul::-webkit-scrollbar-thumb {
+    background: rgba(182, 156, 255, 0.55);
+    border-radius: 4px;
   }
 
   li {
@@ -317,7 +330,7 @@
       top: 0.5rem;
       left: 0.5rem;
       width: calc(100vw - 1rem);
-      max-height: 55vh;
+      max-height: 38vh;
       padding: 0.75rem;
       gap: 0.4rem;
     }

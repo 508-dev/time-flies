@@ -69,6 +69,7 @@ export const lensFragmentShader = /* glsl */ `
   precision highp float;
 
   uniform vec2 uResolution;
+  uniform vec2 uCenter; // shifts the focal center (e.g. push the hole down on mobile)
   uniform vec3 uCamPos;
   uniform vec3 uCamRight;
   uniform vec3 uCamUp;
@@ -145,6 +146,7 @@ export const lensFragmentShader = /* glsl */ `
 
   void main() {
     vec2 uv = (gl_FragCoord.xy / uResolution) * 2.0 - 1.0;
+    uv += uCenter;
     uv.x *= uAspect;
     vec3 dir = normalize(
       uCamForward + uv.x * uTanHalfFov * uCamRight + uv.y * uTanHalfFov * uCamUp

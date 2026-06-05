@@ -69,6 +69,7 @@ export class BlackHoleScene {
   private readonly camRight = new Vector3();
   private readonly camUp = new Vector3();
   private readonly camForward = new Vector3();
+  private readonly centerOffset = new Vector2(); // focal shift; pushes the hole down on mobile
 
   private hoverHandler: HoverHandler = () => {};
   private lastPointer: { clientX: number; clientY: number } | null = null;
@@ -104,6 +105,7 @@ export class BlackHoleScene {
       depthWrite: false,
       uniforms: {
         uResolution: { value: new Vector2(1, 1) },
+        uCenter: { value: this.centerOffset },
         uCamPos: { value: new Vector3() },
         uCamRight: { value: this.camRight },
         uCamUp: { value: this.camUp },
@@ -249,6 +251,9 @@ export class BlackHoleScene {
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.pointer.x = ((this.lastPointer.clientX - rect.left) / rect.width) * 2 - 1;
     this.pointer.y = -((this.lastPointer.clientY - rect.top) / rect.height) * 2 + 1;
+    // Match the shader's focal offset so picks align with where the hole appears.
+    this.pointer.x += this.centerOffset.x;
+    this.pointer.y += this.centerOffset.y;
     this.raycaster.setFromCamera(this.pointer, this.camera);
     const hit = this.raycaster.intersectObjects(this.picks.children, false)[0];
     if (hit) {
@@ -269,6 +274,11 @@ export class BlackHoleScene {
     const pr = this.renderer.getPixelRatio();
     this.lensMaterial.uniforms.uResolution.value.set(w * pr, h * pr);
     this.lensMaterial.uniforms.uAspect.value = w / h;
+
+    // On narrow (mobile) viewports, push the hole down so the legend owns the
+    // top and the black hole fills the space beneath it. Same 480px breakpoint
+    // as the legend's CSS.
+    this.centerOffset.set(0, w <= 480 ? 0.42 : 0);
   }
 
   private updateLensUniforms(): void {
